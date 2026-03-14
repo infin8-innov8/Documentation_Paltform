@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block sidebar %}
+<aside class="sidebar">
+    <nav class="sidebar-nav">
+        <a href="#" class="sidebar-link active">Welcome</a>
+        <a href="#" class="sidebar-link">Frequently Asked Questions</a>
+        <a href="#" class="sidebar-link">Project Setup</a>
+        <a href="#" class="sidebar-link">Project Management</a>
+        <a href="#" class="sidebar-link">Workspace Management</a>
+        <a href="#" class="sidebar-link">Subscriptions & Billing</a>
+    </nav>
+</aside>
+{% endblock %}
+
+{% block content %}
+<style>
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: #1a1a1a;
+    }
+
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .card {
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        background: white;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 200px;
+        cursor: pointer;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.05);
+        border-color: #dcdcdc;
+    }
+
+    .card-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: #1a1a1a;
+    }
+
+    .card-desc {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 2rem;
+    }
+
+    .card-arrow {
+        font-size: 1.25rem;
+        color: #1a1a1a;
+        font-weight: bold;
+    }
+</style>
+
+<h1 class="page-title">Welcome</h1>
+<p class="page-subtitle">Welcome to the Punchlist Documentation.</p>
+<p class="page-subtitle" style="margin-bottom: 2rem;">This documentation provides the knowledge to successfully use the
+    Punchlist App.</p>
+
+<div class="cards-grid">
+    <div class="card">
+        <div>
+            <h3 class="card-title">Subscriptions & Billing</h3>
+            <p class="card-desc">Understanding your plan and invoices, and updatin...</p>
+        </div>
+        <div class="card-arrow">→</div>
+    </div>
+
+    <div class="card">
+        <div>
+            <h3 class="card-title">Frequently Asked Questions</h3>
+            <p class="card-desc">Questions you may have wondered, but hadn't yet...</p>
+        </div>
+        <div class="card-arrow">→</div>
+    </div>
+
+    <div class="card">
+        <div>
+            <h3 class="card-title">Project Management</h3>
+            <p class="card-desc">The ins-and-outs managing Punchlist...</p>
+        </div>
+        <div class="card-arrow">→</div>
+    </div>
+
+    <div class="card">
+        <div>
+            <h3 class="card-title">Project Setup</h3>
+            <p class="card-desc">Everything you need to know about setting up a...</p>
+        </div>
+        <div class="card-arrow">→</div>
+    </div>
+
+    <div class="card">
+        <div>
+            <h3 class="card-title">Workspace Management</h3>
+            <p class="card-desc">Everything you need to know about managing a...</p>
+        </div>
+        <div class="card-arrow">→</div>
+    </div>
+</div>
+{% endblock %}

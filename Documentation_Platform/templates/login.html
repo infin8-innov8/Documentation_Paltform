@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-container">
+    <h2 style="margin-bottom: 1.5rem; text-align: center;">Welcome Back</h2>
+
+    {% if form.errors %}
+    <div class="messages">
+        Please correct the errors below.
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.password.id_for_label }}">Password</label>
+            {{ form.password }}
+        </div>
+        <button type="submit" class="btn-primary">Login</button>
+    </form>
+</div>
+{% endblock %}
