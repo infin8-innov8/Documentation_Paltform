@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .profile-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        background: white;
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .profile-avatar-large {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .profile-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 1.1rem;
+        color: var(--text-color);
+        font-weight: 500;
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: 1rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-secondary {
+        background: white;
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+        flex: 1;
+        transition: background 0.2s;
+    }
+
+    .btn-secondary:hover {
+        background: #f8f9fa;
+    }
+
+    .btn-danger {
+        background: white;
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+        flex: 1;
+        transition: background 0.2s;
+    }
+
+    .btn-danger:hover {
+        background: #fef2f2;
+    }
+</style>
+
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar-large">
+            {{ request.user.name|make_list|first|upper }}
+        </div>
+        <div>
+            <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">{{ request.user.name }}</h1>
+            <p style="color: var(--text-muted);">@{{ request.user.username }}</p>
+        </div>
+    </div>
+
+    <div class="profile-info">
+        <div class="info-group">
+            <span class="info-label">Email Address</span>
+            <span class="info-value">{{ request.user.email }}</span>
+        </div>
+        <div class="info-group">
+            <span class="info-label">Department</span>
+            <span class="info-value">{{ request.user.department.department_name|default:"N/A" }}</span>
+        </div>
+        <div class="info-group">
+            <span class="info-label">Role</span>
+            <span class="info-value">{{ request.user.role.role_name|default:"N/A" }}</span>
+        </div>
+        <div class="info-group">
+            <span class="info-label">Account Status</span>
+            <span class="info-value" style="color: #059669;">Active</span>
+        </div>
+    </div>
+
+    <div class="profile-actions">
+        <a href="#" class="btn-secondary">Reset Password</a>
+        <form action="{% url 'logout' %}" method="post" style="flex: 1; display: flex;">
+            {% csrf_token %}
+            <button type="submit" class="btn-danger" style="width: 100%;">Logout</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
