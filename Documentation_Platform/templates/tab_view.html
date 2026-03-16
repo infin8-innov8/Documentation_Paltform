@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .page-header {
+        margin-bottom: 2.5rem;
+        animation: fadeSlideDown 0.5s ease-out both;
+    }
+
+    .page-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--primary);
+        background: rgba(14, 165, 233, 0.1);
+        border: 1px solid rgba(14, 165, 233, 0.25);
+        padding: 0.3rem 0.8rem;
+        border-radius: 100px;
+        margin-bottom: 0.9rem;
+    }
+
+    .page-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 2.1rem;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.2;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 1rem;
+    }
+
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .doc-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.6rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 190px;
+        cursor: pointer;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s, border-color 0.22s;
+        opacity: 0;
+        animation: cardIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .doc-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .doc-card:hover::before {
+        opacity: 1;
+    }
+
+    .doc-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(14, 165, 233, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+        border-color: rgba(14, 165, 233, 0.3);
+    }
+
+    .doc-card:nth-child(1) {
+        animation-delay: 0.05s;
+    }
+
+    .doc-card:nth-child(2) {
+        animation-delay: 0.12s;
+    }
+
+    .doc-card:nth-child(3) {
+        animation-delay: 0.19s;
+    }
+
+    @keyframes cardIn {
+        from {
+            opacity: 0;
+            transform: translateY(18px) scale(0.97);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .card-icon {
+        font-size: 1.7rem;
+        margin-bottom: 0.9rem;
+        display: inline-block;
+    }
+
+    .card-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin-bottom: 0.5rem;
+        color: var(--text);
+    }
+
+    .card-desc {
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        line-height: 1.55;
+        flex: 1;
+        margin-bottom: 1.2rem;
+    }
+
+    .card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-arrow {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: rgba(14, 165, 233, 0.1);
+        border: 1px solid rgba(14, 165, 233, 0.2);
+        border-radius: 8px;
+        color: var(--primary);
+        font-size: 1rem;
+        transition: background 0.2s, transform 0.2s;
+    }
+
+    .doc-card:hover .card-arrow {
+        background: var(--primary);
+        color: white;
+        transform: translateX(2px);
+    }
+
+    @keyframes fadeSlideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-14px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="page-header">
+    <div class="page-tag">📂 Department Workspace</div>
+    <h1 class="page-title"><span style="color:var(--primary);">{{ icon }}</span> {{ page_title }}</h1>
+    <p class="page-subtitle">{{ page_desc }}</p>
+</div>
+
+<!-- Placeholder Cards matching the user's intent to keep the card design on inner tabs -->
+<div class="cards-grid">
+    <div class="doc-card">
+        <div>
+            <span class="card-icon">📄</span>
+            <h3 class="card-title">Recent Documents</h3>
+            <p class="card-desc">View the most recently uploaded and modified documents in this category.</p>
+        </div>
+        <div class="card-footer">
+            <span class="card-label"
+                style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">View
+                List</span>
+            <div class="card-arrow">→</div>
+        </div>
+    </div>
+
+    <div class="doc-card">
+        <div>
+            <span class="card-icon">⚙️</span>
+            <h3 class="card-title">Manage Files</h3>
+            <p class="card-desc">Upload, edit, or remove documents and reports in this workspace.</p>
+        </div>
+        <div class="card-footer">
+            <span class="card-label"
+                style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">Settings</span>
+            <div class="card-arrow">→</div>
+        </div>
+    </div>
+
+    <div class="doc-card">
+        <div>
+            <span class="card-icon">🗄️</span>
+            <h3 class="card-title">Archived Reports</h3>
+            <p class="card-desc">Access historically archived documents and previous templates.</p>
+        </div>
+        <div class="card-footer">
+            <span class="card-label"
+                style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">Archive</span>
+            <div class="card-arrow">→</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

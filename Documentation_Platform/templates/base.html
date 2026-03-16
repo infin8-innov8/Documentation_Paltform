@@ -1,35 +1,49 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentation Platform</title>
+    <title>TIC MATRIX — Documentation Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --primary-color: #f73859;
-            --text-color: #2b2b2b;
-            --text-muted: #6b6b6b;
-            --bg-color: #fcfcfc;
-            --border-color: #eaeaea;
-            --card-hover: #f1f1f1;
-            --sidebar-active: #f1f2f6;
-            --btn-bg: #d0cbf2;
-            --btn-text: #2c2560;
-            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --accent: #38bdf8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --bg: #f0f4f8;
+            --surface: #ffffff;
+            --surface2: #f8fafc;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --navy: #0c1a2e;
+            --navy-light: #112240;
+            --sidebar-w: 270px;
+            --navbar-h: 68px;
+            --radius: 14px;
+            --shadow: 0 4px 24px rgba(14, 165, 233, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
         }
 
-        * {
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
         body {
-            font-family: var(--font-family);
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
         }
 
         a {
@@ -37,42 +51,65 @@
             color: inherit;
         }
 
-        /* Top Navigation */
+        /* ───── NAVBAR ───── */
         .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: var(--navbar-h);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 1rem 2rem;
-            border-bottom: 1px solid var(--border-color);
-            background: white;
+            padding: 0 2rem;
+            background: var(--navy);
+            border-bottom: 1px solid rgba(14, 165, 233, 0.18);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
         }
 
         .logo {
-            font-weight: 800;
-            font-size: 1.2rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            color: #2c2560;
+            gap: 0.65rem;
         }
 
-        .logo-icon {
-            color: var(--primary-color);
+        .logo-img {
+            height: 40px;
+            width: auto;
+            filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.5));
+            transition: filter 0.3s;
         }
 
-        .nav-links {
+        .logo-img:hover {
+            filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.9));
+        }
+
+        .logo-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: #e2f4ff;
+            letter-spacing: 0.04em;
+        }
+
+        /* security badge */
+        .secure-badge {
             display: flex;
-            gap: 2rem;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
             font-weight: 600;
-            font-size: 0.95rem;
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 0.3rem 0.75rem;
+            border-radius: 100px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
         }
 
-        .nav-links a.active {
-            color: var(--primary-color);
-        }
-
-        .nav-links a:hover {
-            opacity: 0.8;
+        .secure-badge::before {
+            content: '🔒';
+            font-size: 0.8rem;
         }
 
         .nav-actions {
@@ -82,145 +119,277 @@
         }
 
         .search-bar {
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            background: #f8f9fa;
-            width: 250px;
+            padding: 0.55rem 1.1rem 0.55rem 2.4rem;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+            width: 220px;
             font-family: inherit;
+            font-size: 0.9rem;
+            color: #e2f4ff;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 0.75rem center;
+            transition: border 0.2s, background-color 0.2s;
         }
 
-        .btn-auth {
-            background-color: var(--btn-bg);
-            color: var(--btn-text);
-            padding: 0.5rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: opacity 0.2s;
+        .search-bar:focus {
+            outline: none;
+            border-color: rgba(14, 165, 233, 0.5);
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
-        .btn-auth:hover {
-            opacity: 0.8;
-        }
-
-        /* Main Layout */
-        .container {
-            display: flex;
-            max-width: 1400px;
-            margin: 0 auto;
-            min-height: calc(100vh - 70px);
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 300px;
-            padding: 2rem 1rem;
-            border-right: 1px solid var(--border-color);
-        }
-
-        .sidebar-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .sidebar-link {
-            padding: 0.75rem 1rem;
-            border-radius: 12px;
-            font-weight: 600;
-            color: var(--text-color);
-            transition: background 0.2s;
-        }
-
-        .sidebar-link.active {
-            background-color: var(--sidebar-active);
-            color: #1a1a1a;
-        }
-
-        .sidebar-link:hover:not(.active) {
-            background-color: #fafafa;
+        .search-bar::placeholder {
+            color: #64748b;
         }
 
         .profile-avatar {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
-            background-color: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
+            font-weight: 700;
+            font-size: 1rem;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(14, 165, 233, 0.4);
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 0 0 rgba(14, 165, 233, 0);
         }
 
         .profile-avatar:hover {
-            opacity: 0.9;
+            border-color: var(--primary);
+            transform: scale(1.05);
+            box-shadow: 0 0 12px rgba(14, 165, 233, 0.5);
         }
 
-        /* Content Area */
+        .btn-login {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1.4rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .btn-login:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        /* ───── LAYOUT ───── */
+        .container {
+            display: flex;
+            max-width: 1440px;
+            margin: 0 auto;
+            min-height: calc(100vh - var(--navbar-h));
+        }
+
+        /* ───── SIDEBAR ───── */
+        .sidebar {
+            width: var(--sidebar-w);
+            min-width: var(--sidebar-w);
+            background: var(--navy);
+            border-right: 1px solid rgba(14, 165, 233, 0.12);
+            padding: 2rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: sticky;
+            top: var(--navbar-h);
+            height: calc(100vh - var(--navbar-h));
+            overflow-y: auto;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #475569;
+            padding: 0 0.8rem;
+            margin-bottom: 0.25rem;
+            margin-top: 1rem;
+        }
+
+        .sidebar-section-title:first-child {
+            margin-top: 0;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.7rem 0.9rem;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            transition: background 0.18s, color 0.18s, transform 0.15s;
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .sidebar-link .icon {
+            font-size: 1rem;
+            width: 22px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(14, 165, 233, 0.08);
+            color: var(--accent);
+            border-color: rgba(14, 165, 233, 0.15);
+        }
+
+        .sidebar-link.active {
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--primary);
+            border-color: rgba(14, 165, 233, 0.25);
+            font-weight: 600;
+        }
+
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: var(--primary);
+            border-radius: 0 3px 3px 0;
+        }
+
+        /* ───── MAIN CONTENT ───── */
         .content {
             flex: 1;
-            padding: 3rem 4rem;
+            padding: 2.5rem 3rem;
+            overflow-y: auto;
         }
 
-        /* Auth Form Styles */
-        .auth-container {
-            max-width: 400px;
-            margin: 4rem auto;
+        /* ───── AUTH FORMS ───── */
+        .auth-page {
+            min-height: calc(100vh - var(--navbar-h));
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border: 1px solid var(--border-color);
+            background: radial-gradient(ellipse at 50% 0%, rgba(14, 165, 233, 0.08) 0%, transparent 60%);
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            box-shadow: var(--shadow), 0 0 0 1px rgba(14, 165, 233, 0.08);
+            border: 1px solid var(--border);
+            animation: authAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes authAppear {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .auth-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.35rem;
+            text-align: center;
+        }
+
+        .auth-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 2rem;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.3rem;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.4rem;
         }
 
-        .form-control {
+        .form-control,
+        .auth-container input[type="text"],
+        .auth-container input[type="email"],
+        .auth-container input[type="password"] {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
             font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text);
+            background: var(--surface);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus,
+        .auth-container input[type="text"]:focus,
+        .auth-container input[type="email"]:focus,
+        .auth-container input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
         }
 
         .btn-primary {
             width: 100%;
-            padding: 0.75rem;
-            background: var(--btn-text);
+            padding: 0.8rem;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-weight: 600;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.95rem;
             cursor: pointer;
-            font-size: 1rem;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            letter-spacing: 0.02em;
+            box-shadow: 0 2px 12px rgba(14, 165, 233, 0.35);
         }
 
         .btn-primary:hover {
-            opacity: 0.9;
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 18px rgba(14, 165, 233, 0.45);
         }
 
         .messages {
-            margin-bottom: 1rem;
-            padding: 1rem;
-            border-radius: 6px;
-            background: #feeced;
+            padding: 0.85rem 1rem;
+            border-radius: 8px;
+            background: #fef2f2;
             color: #dc2626;
-            border: 1px solid #f8aba6;
+            border: 1px solid #fecaca;
+            font-size: 0.9rem;
+            margin-bottom: 1.2rem;
         }
     </style>
 </head>
@@ -228,37 +397,58 @@
 <body>
     <header class="navbar">
         <div class="logo">
-            <span class="logo-icon">▲</span> PUNCHLIST
+            <img src="{% static 'TIC Matrix.png' %}" alt="TIC MATRIX" class="logo-img"
+                onerror="this.style.display='none'; document.getElementById('logo-text').style.display='block';">
+            <span id="logo-text" style="display:none;" class="logo-text">TIC MATRIX</span>
         </div>
-        <nav class="nav-links">
-            <a href="{% url 'home' %}" class="active">Homepage</a>
-            <a href="#">Integrations</a>
-            <a href="#">Pricing</a>
-            <a href="#">Case Studies</a>
-        </nav>
+
         <div class="nav-actions">
-            <input type="text" class="search-bar" placeholder="🔍 Search...">
+            <input type="text" class="search-bar" placeholder="Search documents...">
             {% if request.user.is_authenticated %}
-            <a href="{% url 'profile' %}" title="View Profile">
-                <div class="profile-avatar">
-                    {{ request.user.name|make_list|first }}
-                </div>
+            <a href="{% url 'profile' %}" title="View Profile ({{ request.user.name }})">
+                <div class="profile-avatar">{{ request.user.name|make_list|first }}</div>
             </a>
             {% else %}
-            <a href="{% url 'login' %}" class="btn-auth">Login</a>
+            <a href="{% url 'login' %}" class="btn-login">Login</a>
             {% endif %}
         </div>
     </header>
 
     <div class="container">
-        {% block sidebar %}{% endblock %}
+        {% if request.user.is_authenticated %}
+        <aside class="sidebar">
+            <span class="sidebar-section-title">Navigation</span>
+            <a href="{% url 'home' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <span class="icon">🏠</span> Dashboard
+            </a>
+            <a href="{% url 'idm_reports' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'idm_reports' %}active{% endif %}">
+                <span class="icon">📋</span> IDM Reports
+            </a>
+            <a href="{% url 'odm_reports' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'odm_reports' %}active{% endif %}">
+                <span class="icon">📁</span> ODM Reports
+            </a>
+            <a href="{% url 'monthly_progress' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'monthly_progress' %}active{% endif %}">
+                <span class="icon">📈</span> Monthly Progress
+            </a>
+            <a href="{% url 'bootcamp_reports' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'bootcamp_reports' %}active{% endif %}">
+                <span class="icon">🎓</span> Bootcamp Reports
+            </a>
+            <a href="{% url 'guidelines' %}"
+                class="sidebar-link {% if request.resolver_match.url_name == 'guidelines' %}active{% endif %}">
+                <span class="icon">📌</span> Guidelines & Other
+            </a>
+        </aside>
+        {% endif %}
 
         <main class="content">
             {% if messages %}
             <div class="messages">
-                {% for message in messages %}
-                {{ message }}
-                {% endfor %}
+                {% for message in messages %}{{ message }}{% endfor %}
             </div>
             {% endif %}
 

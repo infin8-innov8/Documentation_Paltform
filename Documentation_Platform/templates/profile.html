@@ -2,143 +2,269 @@
 
 {% block content %}
 <style>
-    .profile-container {
-        max-width: 600px;
-        margin: 2rem auto;
-        background: white;
-        border-radius: 12px;
-        padding: 2.5rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        border: 1px solid var(--border-color);
+    .profile-wrap {
+        max-width: 680px;
+        margin: 0 auto;
+        animation: profileIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    .profile-header {
+    @keyframes profileIn {
+        from {
+            opacity: 0;
+            transform: translateY(24px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ── Header card ── */
+    .profile-hero {
+        background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 100%);
+        border-radius: var(--radius);
+        padding: 2.2rem 2.5rem;
         display: flex;
         align-items: center;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-        padding-bottom: 2rem;
-        border-bottom: 1px solid var(--border-color);
+        gap: 2rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(14, 165, 233, 0.2);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+        position: relative;
+        overflow: hidden;
     }
 
-    .profile-avatar-large {
-        width: 80px;
-        height: 80px;
+    .profile-hero::after {
+        content: '';
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(14, 165, 233, 0.15), transparent 70%);
+        pointer-events: none;
+    }
+
+    .profile-avatar-xl {
+        width: 88px;
+        height: 88px;
         border-radius: 50%;
-        background-color: var(--primary-color);
+        background: linear-gradient(135deg, var(--primary), #7c3aed);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
+        font-size: 2.4rem;
         font-weight: 700;
+        flex-shrink: 0;
+        border: 3px solid rgba(14, 165, 233, 0.5);
+        box-shadow: 0 0 0 6px rgba(14, 165, 233, 0.1);
     }
 
-    .profile-info {
+    .profile-hero-info h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #e2f4ff;
+        margin-bottom: 0.2rem;
+    }
+
+    .profile-hero-info .username-tag {
+        color: #7db9d6;
+        font-size: 0.95rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--success);
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        padding: 0.25rem 0.7rem;
+        border-radius: 100px;
+    }
+
+    .status-pill::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--success);
+        animation: statusBlink 2s ease-in-out infinite;
+    }
+
+    @keyframes statusBlink {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.4;
+        }
+    }
+
+    /* ── Info grid ── */
+    .info-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.8rem 2.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card-title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-card-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    .info-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1.5rem;
-        margin-bottom: 2rem;
     }
 
-    .info-group {
+    .info-row {
         display: flex;
         flex-direction: column;
         gap: 0.25rem;
     }
 
     .info-label {
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         font-weight: 600;
-        color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
     }
 
     .info-value {
-        font-size: 1.1rem;
-        color: var(--text-color);
+        font-size: 1rem;
         font-weight: 500;
+        color: var(--text);
     }
 
+    /* ── Actions ── */
     .profile-actions {
         display: flex;
         gap: 1rem;
-        padding-top: 2rem;
-        border-top: 1px solid var(--border-color);
     }
 
-    .btn-secondary {
-        background: white;
-        color: var(--text-color);
-        border: 1px solid var(--border-color);
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        text-align: center;
+    .btn-outline {
         flex: 1;
-        transition: background 0.2s;
-    }
-
-    .btn-secondary:hover {
-        background: #f8f9fa;
-    }
-
-    .btn-danger {
-        background: white;
-        color: #dc2626;
-        border: 1px solid #fca5a5;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.5rem;
+        border-radius: 9px;
         font-weight: 600;
+        font-size: 0.9rem;
+        border: 1.5px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
         cursor: pointer;
+        transition: background 0.2s, border-color 0.2s, transform 0.15s;
         text-align: center;
-        flex: 1;
-        transition: background 0.2s;
     }
 
-    .btn-danger:hover {
+    .btn-outline:hover {
+        background: var(--surface2);
+        border-color: var(--primary);
+        color: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    .btn-danger-outline {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.8rem 1.5rem;
+        border-radius: 9px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: 1.5px solid #fecaca;
+        background: var(--surface);
+        color: var(--danger);
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+
+    .btn-danger-outline:hover {
         background: #fef2f2;
+        border-color: var(--danger);
+        transform: translateY(-1px);
     }
 </style>
 
-<div class="profile-container">
-    <div class="profile-header">
-        <div class="profile-avatar-large">
+<div class="profile-wrap">
+
+    <!-- Hero banner -->
+    <div class="profile-hero">
+        <div class="profile-avatar-xl">
             {{ request.user.name|make_list|first|upper }}
         </div>
-        <div>
-            <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">{{ request.user.name }}</h1>
-            <p style="color: var(--text-muted);">@{{ request.user.username }}</p>
+        <div class="profile-hero-info">
+            <h1>{{ request.user.name }}</h1>
+            <p class="username-tag">@{{ request.user.username }}</p>
+            <span class="status-pill">Active Account</span>
         </div>
     </div>
 
-    <div class="profile-info">
-        <div class="info-group">
-            <span class="info-label">Email Address</span>
-            <span class="info-value">{{ request.user.email }}</span>
-        </div>
-        <div class="info-group">
-            <span class="info-label">Department</span>
-            <span class="info-value">{{ request.user.department.department_name|default:"N/A" }}</span>
-        </div>
-        <div class="info-group">
-            <span class="info-label">Role</span>
-            <span class="info-value">{{ request.user.role.role_name|default:"N/A" }}</span>
-        </div>
-        <div class="info-group">
-            <span class="info-label">Account Status</span>
-            <span class="info-value" style="color: #059669;">Active</span>
+    <!-- Details -->
+    <div class="info-card">
+        <div class="info-card-title">🪪 Account Information</div>
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label">Email Address</span>
+                <span class="info-value">{{ request.user.email }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Department</span>
+                <span class="info-value">{{ request.user.department.department_name|default:"—" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Role</span>
+                <span class="info-value">{{ request.user.role.role_name|default:"—" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Account Status</span>
+                <span class="info-value" style="color:var(--success); font-weight:600;">✔ Active</span>
+            </div>
         </div>
     </div>
 
+    <!-- Actions -->
     <div class="profile-actions">
-        <a href="#" class="btn-secondary">Reset Password</a>
-        <form action="{% url 'logout' %}" method="post" style="flex: 1; display: flex;">
+        <a href="{% url 'password_change' %}" class="btn-outline">🔑 Change Password</a>
+        <form action="{% url 'logout' %}" method="post" style="flex:1; display:flex;">
             {% csrf_token %}
-            <button type="submit" class="btn-danger" style="width: 100%;">Logout</button>
+            <button type="submit" class="btn-danger-outline">🚪 Logout</button>
         </form>
     </div>
+
 </div>
 {% endblock %}
