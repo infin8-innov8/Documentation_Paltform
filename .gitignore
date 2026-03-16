@@ -107,6 +107,7 @@ env/
 ENV/ 
 env.bak/ 
 venv.bak/ 
+client_secret.json
 
 # mkdocs documentation 
 /site 

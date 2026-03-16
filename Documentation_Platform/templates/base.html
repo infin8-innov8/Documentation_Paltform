@@ -391,6 +391,103 @@
             font-size: 0.9rem;
             margin-bottom: 1.2rem;
         }
+
+        /* ───── PROFESSIONAL SECURITY UI ───── */
+        .auth-card-professional {
+            border: 1px solid rgba(14, 165, 233, 0.15);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow:
+                0 10px 40px -10px rgba(14, 165, 233, 0.12),
+                0 0 0 1px rgba(14, 165, 233, 0.05);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .auth-card-professional::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), #7c3aed);
+        }
+
+        .security-icon-large {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(124, 58, 237, 0.08));
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            border-radius: 20px;
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 16px rgba(14, 165, 233, 0.1);
+            animation: pulse-border 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-border {
+            0% {
+                border-color: rgba(14, 165, 233, 0.2);
+                box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.1);
+            }
+
+            50% {
+                border-color: rgba(14, 165, 233, 0.4);
+                box-shadow: 0 0 20px 0 rgba(14, 165, 233, 0.15);
+            }
+
+            100% {
+                border-color: rgba(14, 165, 233, 0.2);
+                box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.1);
+            }
+        }
+
+        .otp-input-container {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .otp-field {
+            width: 45px;
+            height: 55px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--surface2);
+            transition: all 0.2s;
+            color: var(--navy);
+        }
+
+        .otp-field:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+            outline: none;
+            transform: translateY(-2px);
+        }
+
+        .security-badge-soft {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 100px;
+            color: var(--success);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
     </style>
 </head>
 
@@ -426,10 +523,13 @@
                 class="sidebar-link {% if request.resolver_match.url_name == 'idm_reports' %}active{% endif %}">
                 <span class="icon">📋</span> IDM Reports
             </a>
+            {% if request.user.is_superuser or request.user.role.role_name == 'Admin' or request.user.role.role_name ==
+            'President' %}
             <a href="{% url 'odm_reports' %}"
                 class="sidebar-link {% if request.resolver_match.url_name == 'odm_reports' %}active{% endif %}">
                 <span class="icon">📁</span> ODM Reports
             </a>
+            {% endif %}
             <a href="{% url 'monthly_progress' %}"
                 class="sidebar-link {% if request.resolver_match.url_name == 'monthly_progress' %}active{% endif %}">
                 <span class="icon">📈</span> Monthly Progress
