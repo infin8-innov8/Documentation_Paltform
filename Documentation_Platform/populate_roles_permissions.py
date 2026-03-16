@@ -8,7 +8,7 @@ from auth_autho.models import Role, Permission
 
 def run():
     roles = ['President', 'Admin', 'Head of Department']
-    permissions = ['Remove documents', 'Modify documents', 'view documents']
+    permissions = ['Modify documents', 'view documents', 'upload documents', 'delete documents']
 
     for r in roles:
         role, created = Role.objects.get_or_create(role_name=r)
