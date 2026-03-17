@@ -113,7 +113,7 @@ def upload_document(file_obj, filename, report_type, department_name=None):
     """
     Upload a document to Google Drive.
     Converts .docx to Google Docs format on Drive.
-    Returns (gdrive_file_id, gdrive_pdf_id).
+    Returns (gdrive_file_id, gdrive_pdf_id, thumbnail_link).
     """
     from googleapiclient.http import MediaIoBaseUpload
 
@@ -137,45 +137,69 @@ def upload_document(file_obj, filename, report_type, department_name=None):
     uploaded_file = service.files().create(
         body=file_metadata,
         media_body=media,
-        fields='id, name, webViewLink'
+        fields='id, name, webViewLink, thumbnailLink'
     ).execute()
 
     gdrive_file_id = uploaded_file.get('id')
+    thumbnail_link = uploaded_file.get('thumbnailLink')
     logger.info(f"Uploaded document: {filename} → Drive ID: {gdrive_file_id}")
 
-    # Export as PDF and upload separately
+    # Export as PDF and upload separately (optional now that we use live links, but good for backup)
     gdrive_pdf_id = _export_as_pdf(service, gdrive_file_id, filename, folder_id)
 
-    return gdrive_file_id, gdrive_pdf_id
+    return gdrive_file_id, gdrive_pdf_id, thumbnail_link
 
 
 def _export_as_pdf(service, doc_id, original_name, folder_id):
     """Export a Google Doc as PDF and save it on Drive."""
     from googleapiclient.http import MediaIoBaseUpload
 
-    pdf_content = service.files().export(fileId=doc_id, mimeType='application/pdf').execute()
+    try:
+        pdf_content = service.files().export(fileId=doc_id, mimeType='application/pdf').execute()
 
-    pdf_name = os.path.splitext(original_name)[0] + ' (View Only).pdf'
-    file_metadata = {
-        'name': pdf_name,
-        'parents': [folder_id],
-    }
+        pdf_name = os.path.splitext(original_name)[0] + ' (View Only).pdf'
+        file_metadata = {
+            'name': pdf_name,
+            'parents': [folder_id],
+        }
 
-    media = MediaIoBaseUpload(
-        BytesIO(pdf_content),
-        mimetype='application/pdf',
-        resumable=True
-    )
+        media = MediaIoBaseUpload(
+            BytesIO(pdf_content),
+            mimetype='application/pdf',
+            resumable=True
+        )
 
-    pdf_file = service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields='id'
-    ).execute()
+        pdf_file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id'
+        ).execute()
 
-    pdf_id = pdf_file.get('id')
-    logger.info(f"Created PDF export: {pdf_name} → Drive ID: {pdf_id}")
-    return pdf_id
+        pdf_id = pdf_file.get('id')
+        logger.info(f"Created PDF export: {pdf_name} → Drive ID: {pdf_id}")
+        return pdf_id
+    except Exception as e:
+        logger.error(f"Error exporting PDF for {doc_id}: {e}")
+        return None
+
+
+def get_file_thumbnail(file_id):
+    """Fetches the thumbnail link for a file."""
+    try:
+        service = get_drive_service()
+        file_meta = service.files().get(fileId=file_id, fields='thumbnailLink').execute()
+        return file_meta.get('thumbnailLink')
+    except Exception as e:
+        logger.error(f"Error fetching thumbnail for {file_id}: {e}")
+        return None
+
+
+def get_live_pdf_link(file_id):
+    """
+    Returns a link that exports the Google Doc to PDF on the fly.
+    This ensures the PDF is always up-to-date with the latest edits.
+    """
+    return f"https://docs.google.com/document/d/{file_id}/export?format=pdf"
 
 
 def get_file_view_link(file_id):

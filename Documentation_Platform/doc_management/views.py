@@ -91,6 +91,38 @@ def idm_reports(request):
     })
 
 
+def _attach_gdrive_metadata(reports, user):
+    """
+    Helper to attach Google Drive thumbnails and live PDF links to reports.
+    Uses batch fetching to minimize API calls.
+    """
+    from .gdrive_service import get_drive_service, get_live_pdf_link
+    
+    file_ids = [r.gdrive_file_id for r in reports if r.gdrive_file_id]
+    if not file_ids:
+        for report in reports:
+            report.user_can_modify = _is_admin_or_president(user) or _can_modify(user, report)
+        return reports
+
+    try:
+        service = get_drive_service()
+        # Query for all file metadata in one go
+        q = " or ".join([f"id='{fid}'" for fid in file_ids[:50]])
+        results = service.files().list(q=q, fields='files(id, thumbnailLink)').execute()
+        thumb_map = {f['id']: f.get('thumbnailLink') for f in results.get('files', [])}
+        
+        for report in reports:
+            report.thumbnail_url = thumb_map.get(report.gdrive_file_id)
+            report.live_pdf_link = get_live_pdf_link(report.gdrive_file_id)
+            report.user_can_modify = _is_admin_or_president(user) or _can_modify(user, report)
+    except Exception as e:
+        logger.error(f"Error attaching Drive metadata: {e}")
+        for report in reports:
+            report.user_can_modify = _is_admin_or_president(user) or _can_modify(user, report)
+    
+    return reports
+
+
 @login_required
 def idm_dept_reports(request, dept_id):
     """Show reports for a specific department under IDM."""
@@ -101,12 +133,10 @@ def idm_dept_reports(request, dept_id):
     if not _can_view_department(user, department):
         raise PermissionDenied("You don't have access to this department's documents.")
 
-    reports = Report.objects.filter(report_type='IDM', department=department)
+    reports = Report.objects.filter(report_type='IDM', department=department).order_by('-uploaded_at')
     can_upload = _can_upload(user, department)
 
-    # Tag each report with can_modify for the template
-    for report in reports:
-        report.user_can_modify = _can_modify(user, report)
+    reports = _attach_gdrive_metadata(reports, user)
 
     return render(request, 'idm_dept_reports.html', {
         'page_title': f'IDM — {department.department_name}',
@@ -127,11 +157,10 @@ def odm_reports(request):
     if not _is_admin_or_president(user):
         raise PermissionDenied("You do not have permission to view ODM Reports.")
 
-    reports = Report.objects.filter(report_type='ODM')
+    reports = Report.objects.filter(report_type='ODM').order_by('-uploaded_at')
     can_upload = True  # Admin/President always can
 
-    for report in reports:
-        report.user_can_modify = True  # Admin/President can modify anything
+    reports = _attach_gdrive_metadata(reports, user)
 
     return render(request, 'odm_reports.html', {
         'page_title': 'ODM Reports',
@@ -174,11 +203,10 @@ def monthly_dept_reports(request, dept_id):
     if not _can_view_department(user, department):
         raise PermissionDenied("You don't have access to this department's documents.")
 
-    reports = Report.objects.filter(report_type='MONTHLY', department=department)
+    reports = Report.objects.filter(report_type='MONTHLY', department=department).order_by('-uploaded_at')
     can_upload = _can_upload(user, department)
 
-    for report in reports:
-        report.user_can_modify = _can_modify(user, report)
+    reports = _attach_gdrive_metadata(reports, user)
 
     return render(request, 'monthly_dept_reports.html', {
         'page_title': f'Monthly Progress — {department.department_name}',
@@ -194,11 +222,10 @@ def monthly_dept_reports(request, dept_id):
 @login_required
 def bootcamp_reports(request):
     user = request.user
-    reports = Report.objects.filter(report_type='BOOTCAMP')
+    reports = Report.objects.filter(report_type='BOOTCAMP').order_by('-uploaded_at')
     can_upload = _is_admin_or_president(user) or _is_head(user)
 
-    for report in reports:
-        report.user_can_modify = _is_admin_or_president(user) or _can_modify(user, report)
+    reports = _attach_gdrive_metadata(reports, user)
 
     return render(request, 'bootcamp_reports.html', {
         'page_title': 'Bootcamp Reports',
@@ -213,11 +240,10 @@ def bootcamp_reports(request):
 @login_required
 def guidelines(request):
     user = request.user
-    reports = Report.objects.filter(report_type='GUIDELINES')
+    reports = Report.objects.filter(report_type='GUIDELINES').order_by('-uploaded_at')
     can_upload = _is_admin_or_president(user)
 
-    for report in reports:
-        report.user_can_modify = _is_admin_or_president(user)
+    reports = _attach_gdrive_metadata(reports, user)
 
     return render(request, 'guidelines.html', {
         'page_title': 'Guidelines & Other',
