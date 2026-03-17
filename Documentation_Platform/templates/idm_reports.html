@@ -170,6 +170,7 @@
 <div class="cards-grid">
     {% for dept in departments %}
     <!-- Adding a small style block to dynamically set animation-delay, mimicking nth-child -->
+    <a href="{% url 'idm_dept_reports' dept.department_id %}" style="text-decoration:none; color:inherit;">
     <div class="doc-card" style="--delay-idx: {{ forloop.counter }};">
         <div>
             <span class="card-icon">🏢</span>
@@ -183,6 +184,7 @@
             <div class="card-arrow">→</div>
         </div>
     </div>
+    </a>
     {% empty %}
     <p style="color: var(--text-muted); font-style: italic;">No departments are currently set up.</p>
     {% endfor %}

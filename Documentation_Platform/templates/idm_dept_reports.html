@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .page-header { margin-bottom: 2rem; animation: fadeSlideDown 0.5s ease-out both; }
+    .page-tag { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.25); padding: 0.3rem 0.8rem; border-radius: 100px; margin-bottom: 0.9rem; }
+    .page-title { font-family: 'Space Grotesk', sans-serif; font-size: 2.1rem; font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+    .page-subtitle { color: var(--text-muted); font-size: 1rem; }
+    @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+
+    .header-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+    .btn-open-upload { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.4rem; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s, transform 0.15s; box-shadow: 0 2px 12px rgba(14,165,233,0.3); }
+    .btn-open-upload:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .back-link { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--primary); font-weight: 600; font-size: 0.9rem; transition: opacity 0.15s; }
+    .back-link:hover { opacity: 0.8; }
+
+    /* Reports List */
+    .reports-list { display: flex; flex-direction: column; gap: 0.8rem; }
+    .report-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.4rem 1.6rem; display: flex; align-items: center; gap: 1.2rem; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; opacity: 0; animation: cardIn 0.4s ease forwards; animation-delay: calc(var(--idx,0) * 0.06s); }
+    .report-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(14,165,233,0.1); border-color: rgba(14,165,233,0.25); }
+    @keyframes cardIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    .report-icon-wrap { width: 44px; height: 44px; background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+    .report-info { flex: 1; min-width: 0; }
+    .report-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .report-meta { font-size: 0.82rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .report-meta span { display: inline-flex; align-items: center; gap: 0.25rem; }
+    .report-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+    .report-btn { padding: 0.45rem 0.9rem; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); }
+    .report-btn:hover { border-color: rgba(14,165,233,0.3); color: var(--primary); background: rgba(14,165,233,0.05); }
+    .report-btn.primary { background: rgba(14,165,233,0.1); border-color: rgba(14,165,233,0.2); color: var(--primary); }
+    .report-btn.primary:hover { background: var(--primary); color: white; }
+
+    .empty-state { padding: 3rem; text-align: center; color: var(--text-muted); background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius); font-size: 0.95rem; }
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+</style>
+
+<a href="{% url 'idm_reports' %}" class="back-link">← Back to Departments</a>
+
+<div class="page-header" style="margin-top: 1rem;">
+    <div class="page-tag">📂 {{ department.department_name }}</div>
+    <h1 class="page-title"><span style="color:var(--primary);">{{ icon }}</span> {{ page_title }}</h1>
+    <p class="page-subtitle">{{ page_desc }}</p>
+</div>
+
+<div class="header-actions">
+    <span style="font-size: 0.85rem; color: var(--text-muted);">{{ reports|length }} report{{ reports|length|pluralize }}</span>
+    {% if can_upload %}
+    <button class="btn-open-upload" onclick="openUploadModal()">
+        <span>＋</span> Upload Report
+    </button>
+    {% endif %}
+</div>
+
+<div class="reports-list">
+    {% for report in reports %}
+    <div class="report-card" style="--idx: {{ forloop.counter }};">
+        <div class="report-icon-wrap">📄</div>
+        <div class="report-info">
+            <div class="report-name">{{ report.agenda|default:report.original_filename }}</div>
+            <div class="report-meta">
+                <span>📅 {{ report.date_of_conduction|date:"d M Y" }}</span>
+                <span>🕐 {{ report.time_of_conduction|time:"h:i A" }}</span>
+                <span>👥 {{ report.total_participants }} participants</span>
+                <span>⬆️ {{ report.uploaded_at|date:"d M Y, h:i A" }}</span>
+            </div>
+        </div>
+        <div class="report-actions">
+            {% if report.gdrive_pdf_id %}
+            <a href="https://drive.google.com/file/d/{{ report.gdrive_pdf_id }}/view" target="_blank" class="report-btn primary">View PDF</a>
+            {% endif %}
+            {% if report.gdrive_file_id %}
+            <a href="https://docs.google.com/document/d/{{ report.gdrive_file_id }}/edit" target="_blank" class="report-btn">Open Doc</a>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <p>No reports uploaded yet for this department.</p>
+        {% if can_upload %}<p style="margin-top:0.5rem;">Click <strong>Upload Report</strong> to get started.</p>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% if can_upload %}
+{% include 'includes/_upload_modal.html' %}
+{% endif %}
+{% endblock %}
