@@ -140,6 +140,12 @@
             <div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:3rem;">📄</div>
             {% endif %}
             <div class="card-type-tag">DOCX</div>
+            {# Quick Preview Overlay #}
+            <div onclick="openPreview('{{ report.gdrive_file_id }}', '{{ report.agenda|default:report.original_filename|escapejs }}')" 
+                 style="position:absolute; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s; cursor:pointer;"
+                 onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                 <span style="background:white; color:var(--text); padding:0.5rem 1rem; border-radius:100px; font-weight:700; font-size:0.8rem; box-shadow:0 4px 12px rgba(0,0,0,0.2);">Quick Preview</span>
+            </div>
         </div>
         <div class="report-info">
             <div class="report-name" title="{{ report.agenda|default:report.original_filename }}">{{ report.agenda|default:report.original_filename }}</div>
@@ -154,7 +160,12 @@
             {% if report.live_pdf_link %}
             <a href="{{ report.live_pdf_link }}" target="_blank" class="report-btn primary">View PDF</a>
             {% endif %}
+            
             {% if report.gdrive_file_id %}
+            <a href="https://docs.google.com/document/d/{{ report.gdrive_file_id }}/view" target="_blank" class="report-btn">View Doc</a>
+            {% endif %}
+
+            {% if report.user_can_modify %}
             <a href="https://docs.google.com/document/d/{{ report.gdrive_file_id }}/edit" target="_blank" class="report-btn">Edit Doc</a>
             {% endif %}
         </div>

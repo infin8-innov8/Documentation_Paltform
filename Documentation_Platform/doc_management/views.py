@@ -106,14 +106,16 @@ def _attach_gdrive_metadata(reports, user):
 
     try:
         service = get_drive_service()
-        # Query for all file metadata in one go
-        q = " or ".join([f"id='{fid}'" for fid in file_ids[:50]])
-        results = service.files().list(q=q, fields='files(id, thumbnailLink)').execute()
-        thumb_map = {f['id']: f.get('thumbnailLink') for f in results.get('files', [])}
-        
         for report in reports:
-            report.thumbnail_url = thumb_map.get(report.gdrive_file_id)
-            report.live_pdf_link = get_live_pdf_link(report.gdrive_file_id)
+            if report.gdrive_file_id:
+                try:
+                    # Individual fetch since files.list q doesn't support id
+                    file_meta = service.files().get(fileId=report.gdrive_file_id, fields='thumbnailLink').execute()
+                    report.thumbnail_url = file_meta.get('thumbnailLink')
+                except Exception as e:
+                    logger.warning(f"Failed to fetch thumbnail for {report.gdrive_file_id}: {e}")
+            
+            report.live_pdf_link = get_live_pdf_link(report.gdrive_file_id) if report.gdrive_file_id else None
             report.user_can_modify = _is_admin_or_president(user) or _can_modify(user, report)
     except Exception as e:
         logger.error(f"Error attaching Drive metadata: {e}")
@@ -310,7 +312,7 @@ def upload_report(request):
 
         # Upload to Google Drive
         from .gdrive_service import upload_document
-        gdrive_file_id, gdrive_pdf_id = upload_document(
+        gdrive_file_id, gdrive_pdf_id, thumbnail_url = upload_document(
             file_obj=file,
             filename=file.name,
             report_type=report_type,
