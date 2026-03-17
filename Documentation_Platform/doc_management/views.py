@@ -166,6 +166,32 @@ def monthly_progress(request):
 
 
 @login_required
+def monthly_dept_reports(request, dept_id):
+    """Show monthly progress reports for a specific department."""
+    user = request.user
+    department = get_object_or_404(Department, department_id=dept_id)
+
+    if not _can_view_department(user, department):
+        raise PermissionDenied("You don't have access to this department's documents.")
+
+    reports = Report.objects.filter(report_type='MONTHLY', department=department)
+    can_upload = _can_upload(user, department)
+
+    for report in reports:
+        report.user_can_modify = _can_modify(user, report)
+
+    return render(request, 'monthly_dept_reports.html', {
+        'page_title': f'Monthly Progress — {department.department_name}',
+        'page_desc': f'Monthly Progress reports for {department.department_name}.',
+        'icon': '📈',
+        'department': department,
+        'reports': reports,
+        'can_upload': can_upload,
+        'report_type': 'MONTHLY',
+    })
+
+
+@login_required
 def bootcamp_reports(request):
     user = request.user
     reports = Report.objects.filter(report_type='BOOTCAMP')
@@ -186,10 +212,20 @@ def bootcamp_reports(request):
 
 @login_required
 def guidelines(request):
-    return render(request, 'tab_view.html', {
+    user = request.user
+    reports = Report.objects.filter(report_type='GUIDELINES')
+    can_upload = _is_admin_or_president(user)
+
+    for report in reports:
+        report.user_can_modify = _is_admin_or_president(user)
+
+    return render(request, 'guidelines.html', {
         'page_title': 'Guidelines & Other',
-        'page_desc': 'Access platform guidelines, documentation templates, and miscellaneous resources.',
-        'icon': '📌'
+        'page_desc': 'Platform guidelines, documentation templates, and miscellaneous resources.',
+        'icon': '📌',
+        'reports': reports,
+        'can_upload': can_upload,
+        'report_type': 'GUIDELINES',
     })
 
 
@@ -209,9 +245,17 @@ def upload_report(request):
         report_type = request.POST.get('report_type', '')
         date_str = request.POST.get('date_of_conduction', '')
         time_str = request.POST.get('time_of_conduction', '')
-        total_participants = int(request.POST.get('total_participants', 1))
+        participants_raw = request.POST.get('total_participants')
+        total_participants = int(participants_raw) if participants_raw and participants_raw.isdigit() else None
+        
         agenda = request.POST.get('agenda', '')
         topic = request.POST.get('topic', '')
+        title = request.POST.get('title', '') # Unified title field
+        
+        # For Guidelines, if title is provided, use it as agenda/topic label
+        if report_type == 'GUIDELINES' and title:
+            agenda = title
+
         dept_id = request.POST.get('department_id')
         file = request.FILES.get('document')
 
@@ -226,10 +270,10 @@ def upload_report(request):
         if not file.name.endswith('.docx'):
             return JsonResponse({'success': False, 'error': 'Only .docx files are accepted.'}, status=400)
 
-        # Get department for IDM
+        # Get department for IDM / Monthly
         department = None
         department_name = None
-        if report_type == 'IDM' and dept_id:
+        if (report_type == 'IDM' or report_type == 'MONTHLY') and dept_id:
             department = get_object_or_404(Department, department_id=dept_id)
             department_name = department.department_name
 
@@ -252,8 +296,8 @@ def upload_report(request):
             report_type=report_type,
             department=department,
             uploaded_by=user,
-            date_of_conduction=date_str,
-            time_of_conduction=time_str,
+            date_of_conduction=date_str if date_str else None,
+            time_of_conduction=time_str if time_str else None,
             total_participants=total_participants,
             agenda=agenda,
             topic=topic,
@@ -269,8 +313,11 @@ def upload_report(request):
         })
 
     except Exception as e:
-        logger.error(f"Upload error: {traceback.format_exc()}")
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Upload error")
+        error_msg = str(e)
+        if "Google Drive authentication missing" in error_msg:
+            return JsonResponse({'success': False, 'error': error_msg}, status=401)
+        return JsonResponse({'success': False, 'error': f"An error occurred: {error_msg}"}, status=500)
 
 
 @require_POST

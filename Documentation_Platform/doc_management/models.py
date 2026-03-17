@@ -8,6 +8,8 @@ class Report(models.Model):
         ('IDM', 'Inter Department Meeting'),
         ('ODM', 'Official Department Meeting'),
         ('BOOTCAMP', 'Bootcamp'),
+        ('MONTHLY', 'Monthly Progress'),
+        ('GUIDELINES', 'Guidelines & Other'),
     ]
 
     report_type = models.CharField(max_length=10, choices=REPORT_TYPE_CHOICES)
@@ -19,10 +21,10 @@ class Report(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True
     )
 
-    # Metadata common to all types
-    date_of_conduction = models.DateField()
-    time_of_conduction = models.TimeField()
-    total_participants = models.PositiveIntegerField(default=1)
+    # Metadata - now optional for Guidelines
+    date_of_conduction = models.DateField(null=True, blank=True)
+    time_of_conduction = models.TimeField(null=True, blank=True)
+    total_participants = models.PositiveIntegerField(null=True, blank=True, default=1)
 
     # IDM / ODM specific
     agenda = models.CharField(max_length=500, blank=True, default='')

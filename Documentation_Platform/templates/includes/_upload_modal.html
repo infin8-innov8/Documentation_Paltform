@@ -28,6 +28,12 @@
 
             <!-- Metadata Fields -->
             <div class="upload-fields">
+                {% if report_type == 'GUIDELINES' %}
+                <div class="field-group">
+                    <label>Document Name / Title</label>
+                    <input type="text" name="title" placeholder="e.g., Code of Conduct, Travel Policy..." required>
+                </div>
+                {% else %}
                 <div class="field-row">
                     <div class="field-group">
                         <label>Date of Conduction</label>
@@ -39,7 +45,7 @@
                     </div>
                 </div>
 
-                {% if report_type == 'IDM' or report_type == 'ODM' %}
+                {% if report_type == 'IDM' or report_type == 'ODM' or report_type == 'MONTHLY' %}
                 <div class="field-group">
                     <label>Agenda of Meeting</label>
                     <input type="text" name="agenda" placeholder="Enter the meeting agenda..." required>
@@ -57,6 +63,7 @@
                     <label>Total Participants (including conductor)</label>
                     <input type="number" name="total_participants" min="1" value="1" required>
                 </div>
+                {% endif %}
             </div>
 
             <!-- Submit -->

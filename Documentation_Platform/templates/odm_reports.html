@@ -54,7 +54,7 @@
         <div class="report-info">
             <div class="report-name">{{ report.agenda|default:report.original_filename }}</div>
             <div class="report-meta">
-                <span>📅 {{ report.date_of_conduction|date:"d M Y" }}</span>
+                {% if report.date_of_conduction %}<span>📅 {{ report.date_of_conduction|date:"d M Y" }}</span>{% endif %}
                 <span>🕐 {{ report.time_of_conduction|time:"h:i A" }}</span>
                 <span>👥 {{ report.total_participants }} participants</span>
                 <span>⬆️ {{ report.uploaded_at|date:"d M Y, h:i A" }}</span>

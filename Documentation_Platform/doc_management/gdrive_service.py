@@ -20,33 +20,47 @@ SUBFOLDER_MAP = {
 }
 
 
+SERVICE_ACCOUNT_FILE = BASE_DIR / 'service_account.json'
+
 def _get_credentials():
     """
     Get or refresh Google Drive credentials.
-    On first run, this will open a browser-based consent flow.
-    Subsequent runs use the cached token.json.
+    Priority:
+    1. token.json (Saved from one-time setup) - Represents a manual admin authorization
+    2. service_account.json (Cleanest for server-side, but has limited storage)
+    3. client_secret.json (Fails if token is missing to prevent hanging)
     """
+    from google.oauth2 import service_account
     from google.oauth2.credentials import Credentials
-    from google_auth_oauthlib.flow import InstalledAppFlow
     from google.auth.transport.requests import Request
 
+    # 1. Try stored OAuth token (Option B - Admin's personal account)
     creds = None
     if TOKEN_FILE.exists():
-        creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
+        try:
+            creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
+            if creds and creds.valid:
+                return creds
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+                return creds
+        except Exception as e:
+            logger.error(f"Error loading/refreshing token: {e}")
 
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                str(CLIENT_SECRET_FILE), SCOPES
+    # 2. Try Service Account (Option A - Dedicated account)
+    if SERVICE_ACCOUNT_FILE.exists():
+        try:
+            return service_account.Credentials.from_service_account_file(
+                str(SERVICE_ACCOUNT_FILE), scopes=SCOPES
             )
-            creds = flow.run_local_server(port=0)
-        # Save for future runs
-        with open(TOKEN_FILE, 'w') as f:
-            f.write(creds.to_json())
+        except Exception as e:
+            logger.error(f"Error loading service account: {e}")
 
-    return creds
+    # 3. If no valid credentials, DO NOT start interactive flow in a web request
+    raise Exception(
+        "Google Drive authentication missing. Please run 'python3 manage.py setup_gdrive' "
+        "to authorize the application once."
+    )
 
 
 def get_drive_service():

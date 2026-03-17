@@ -33,16 +33,16 @@
 </style>
 
 <div class="page-header">
-    <div class="page-tag">🎓 Training & Workshops</div>
+    <div class="page-tag">📌 Platform Resources</div>
     <h1 class="page-title"><span style="color:var(--primary);">{{ icon }}</span> {{ page_title }}</h1>
     <p class="page-subtitle">{{ page_desc }}</p>
 </div>
 
 <div class="header-actions">
-    <span style="font-size: 0.85rem; color: var(--text-muted);">{{ reports|length }} report{{ reports|length|pluralize }}</span>
+    <span style="font-size: 0.85rem; color: var(--text-muted);">{{ reports|length }} document{{ reports|length|pluralize }}</span>
     {% if can_upload %}
     <button class="btn-open-upload" onclick="openUploadModal()">
-        <span>＋</span> Upload Report
+        <span>＋</span> Add Document
     </button>
     {% endif %}
 </div>
@@ -50,13 +50,13 @@
 <div class="reports-list">
     {% for report in reports %}
     <div class="report-card" style="--idx: {{ forloop.counter }};">
-        <div class="report-icon-wrap">🎓</div>
+        <div class="report-icon-wrap">📌</div>
         <div class="report-info">
-            <div class="report-name">{{ report.topic|default:report.original_filename }}</div>
+            <div class="report-name">{{ report.agenda|default:report.topic|default:report.original_filename }}</div>
             <div class="report-meta">
-                {% if report.date_of_conduction %}<span>📅 {{ report.date_of_conduction|date:"d M Y" }}</span>{% endif %}
-                <span>🕐 {{ report.time_of_conduction|time:"h:i A" }}</span>
-                <span>👥 {{ report.total_participants }} participants</span>
+                {% if report.date_of_conduction %}
+                <span>📅 {{ report.date_of_conduction|date:"d M Y" }}</span>
+                {% endif %}
                 <span>⬆️ {{ report.uploaded_at|date:"d M Y, h:i A" }}</span>
             </div>
         </div>
@@ -72,8 +72,8 @@
     {% empty %}
     <div class="empty-state">
         <div class="empty-icon">📭</div>
-        <p>No bootcamp reports uploaded yet.</p>
-        {% if can_upload %}<p style="margin-top:0.5rem;">Click <strong>Upload Report</strong> to get started.</p>{% endif %}
+        <p>No guidelines or documents uploaded yet.</p>
+        {% if can_upload %}<p style="margin-top:0.5rem;">Click <strong>Add Document</strong> to get started.</p>{% endif %}
     </div>
     {% endfor %}
 </div>

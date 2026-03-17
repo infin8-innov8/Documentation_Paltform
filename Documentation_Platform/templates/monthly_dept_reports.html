@@ -11,7 +11,10 @@
     .header-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
     .btn-open-upload { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.4rem; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s, transform 0.15s; box-shadow: 0 2px 12px rgba(14,165,233,0.3); }
     .btn-open-upload:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .back-link { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--primary); font-weight: 600; font-size: 0.9rem; transition: opacity 0.15s; }
+    .back-link:hover { opacity: 0.8; }
 
+    /* Reports List */
     .reports-list { display: flex; flex-direction: column; gap: 0.8rem; }
     .report-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.4rem 1.6rem; display: flex; align-items: center; gap: 1.2rem; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; opacity: 0; animation: cardIn 0.4s ease forwards; animation-delay: calc(var(--idx,0) * 0.06s); }
     .report-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(14,165,233,0.1); border-color: rgba(14,165,233,0.25); }
@@ -32,8 +35,10 @@
     .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
 </style>
 
-<div class="page-header">
-    <div class="page-tag">🎓 Training & Workshops</div>
+<a href="{% url 'monthly_progress' %}" class="back-link">← Back to Departments</a>
+
+<div class="page-header" style="margin-top: 1rem;">
+    <div class="page-tag">📂 {{ department.department_name }}</div>
     <h1 class="page-title"><span style="color:var(--primary);">{{ icon }}</span> {{ page_title }}</h1>
     <p class="page-subtitle">{{ page_desc }}</p>
 </div>
@@ -50,9 +55,9 @@
 <div class="reports-list">
     {% for report in reports %}
     <div class="report-card" style="--idx: {{ forloop.counter }};">
-        <div class="report-icon-wrap">🎓</div>
+        <div class="report-icon-wrap">📈</div>
         <div class="report-info">
-            <div class="report-name">{{ report.topic|default:report.original_filename }}</div>
+            <div class="report-name">{{ report.agenda|default:report.original_filename }}</div>
             <div class="report-meta">
                 {% if report.date_of_conduction %}<span>📅 {{ report.date_of_conduction|date:"d M Y" }}</span>{% endif %}
                 <span>🕐 {{ report.time_of_conduction|time:"h:i A" }}</span>
@@ -72,7 +77,7 @@
     {% empty %}
     <div class="empty-state">
         <div class="empty-icon">📭</div>
-        <p>No bootcamp reports uploaded yet.</p>
+        <p>No monthly progress reports uploaded yet for this department.</p>
         {% if can_upload %}<p style="margin-top:0.5rem;">Click <strong>Upload Report</strong> to get started.</p>{% endif %}
     </div>
     {% endfor %}

@@ -7,6 +7,7 @@ urlpatterns = [
     path('idm/<int:dept_id>/', views.idm_dept_reports, name='idm_dept_reports'),
     path('odm/', views.odm_reports, name='odm_reports'),
     path('monthly-progress/', views.monthly_progress, name='monthly_progress'),
+    path('monthly-progress/<int:dept_id>/', views.monthly_dept_reports, name='monthly_dept_reports'),
     path('bootcamp/', views.bootcamp_reports, name='bootcamp_reports'),
     path('guidelines/', views.guidelines, name='guidelines'),
     path('upload-report/', views.upload_report, name='upload_report'),

@@ -102,9 +102,12 @@ celerybeat-schedule.*
 # Environments 
 .env 
 .venv 
+service_account.json
+
 env/ 
 .dpvenv/ 
 ENV/ 
+token.json  
 env.bak/ 
 venv.bak/ 
 client_secret.json
