@@ -10,4 +10,5 @@ urlpatterns = [
     path('bootcamp/', views.bootcamp_reports, name='bootcamp_reports'),
     path('guidelines/', views.guidelines, name='guidelines'),
     path('upload-report/', views.upload_report, name='upload_report'),
+    path('delete-report/<int:report_id>/', views.delete_report, name='delete_report'),
 ]

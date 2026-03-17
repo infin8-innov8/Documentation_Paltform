@@ -1,12 +1,7 @@
 import os
 import logging
 from pathlib import Path
-
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
+from io import BytesIO
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +26,10 @@ def _get_credentials():
     On first run, this will open a browser-based consent flow.
     Subsequent runs use the cached token.json.
     """
+    from google.oauth2.credentials import Credentials
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    from google.auth.transport.requests import Request
+
     creds = None
     if TOKEN_FILE.exists():
         creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
@@ -52,6 +51,7 @@ def _get_credentials():
 
 def get_drive_service():
     """Returns an authenticated Google Drive API service."""
+    from googleapiclient.discovery import build
     creds = _get_credentials()
     return build('drive', 'v3', credentials=creds)
 
@@ -101,6 +101,8 @@ def upload_document(file_obj, filename, report_type, department_name=None):
     Converts .docx to Google Docs format on Drive.
     Returns (gdrive_file_id, gdrive_pdf_id).
     """
+    from googleapiclient.http import MediaIoBaseUpload
+
     service = get_drive_service()
     folder_id = _get_target_folder(service, report_type, department_name)
 
@@ -111,7 +113,6 @@ def upload_document(file_obj, filename, report_type, department_name=None):
         'mimeType': 'application/vnd.google-apps.document',  # Convert to Google Docs
     }
 
-    from io import BytesIO
     content = file_obj.read()
     media = MediaIoBaseUpload(
         BytesIO(content),
@@ -136,6 +137,8 @@ def upload_document(file_obj, filename, report_type, department_name=None):
 
 def _export_as_pdf(service, doc_id, original_name, folder_id):
     """Export a Google Doc as PDF and save it on Drive."""
+    from googleapiclient.http import MediaIoBaseUpload
+
     pdf_content = service.files().export(fileId=doc_id, mimeType='application/pdf').execute()
 
     pdf_name = os.path.splitext(original_name)[0] + ' (View Only).pdf'
@@ -144,7 +147,6 @@ def _export_as_pdf(service, doc_id, original_name, folder_id):
         'parents': [folder_id],
     }
 
-    from io import BytesIO
     media = MediaIoBaseUpload(
         BytesIO(pdf_content),
         mimetype='application/pdf',

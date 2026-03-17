@@ -14,14 +14,54 @@ from .models import Report
 logger = logging.getLogger(__name__)
 
 
-def _can_upload(user):
-    """Check if user is Admin, President, or Head."""
+# ─── Permission Helpers ───
+
+def _is_admin_or_president(user):
+    """Admin & President have full access to everything."""
     if user.is_superuser:
         return True
-    if user.role and user.role.role_name in ['Admin', 'President', 'Head']:
+    return user.role and user.role.role_name in ['Admin', 'President']
+
+
+def _is_head(user):
+    """Head has department-scoped access."""
+    return user.role and user.role.role_name == 'Head of Department'
+
+
+def _can_upload(user, department=None):
+    """
+    Check if user can upload to a specific department (or globally).
+    - Admin/President: can upload anywhere.
+    - Head: can only upload to their own department.
+    """
+    if _is_admin_or_president(user):
         return True
+    if _is_head(user):
+        if department is None:
+            return True  # generic check; dept will be validated at upload time
+        return user.department and user.department.department_id == department.department_id
     return False
 
+
+def _can_view_department(user, department):
+    """Check if user can view a specific department's documents."""
+    if _is_admin_or_president(user):
+        return True
+    if _is_head(user):
+        return user.department and user.department.department_id == department.department_id
+    return False
+
+
+def _can_modify(user, report):
+    """Check if user can modify/delete a specific report."""
+    if _is_admin_or_president(user):
+        return True
+    if _is_head(user) and report.department:
+        return user.department and user.department.department_id == report.department.department_id
+    return False
+
+
+# ─── Views ───
 
 @login_required
 def home(request):
@@ -32,10 +72,11 @@ def home(request):
 def idm_reports(request):
     user = request.user
 
-    if user.is_superuser or (user.role and user.role.role_name in ['Admin', 'President']):
+    if _is_admin_or_president(user):
         departments = Department.objects.all()
         page_desc = 'Select a department below to view its Internal Departmental Meeting reports.'
-    elif user.department:
+    elif _is_head(user) and user.department:
+        # Head only sees their own department
         departments = Department.objects.filter(department_id=user.department.department_id)
         page_desc = f'Viewing Internal Departmental Meeting reports for {user.department.department_name}.'
     else:
@@ -56,13 +97,16 @@ def idm_dept_reports(request, dept_id):
     user = request.user
     department = get_object_or_404(Department, department_id=dept_id)
 
-    # Only allow access to own department, unless Admin/President/superuser
-    if not (user.is_superuser or (user.role and user.role.role_name in ['Admin', 'President'])):
-        if not user.department or user.department.department_id != dept_id:
-            raise PermissionDenied("You don't have access to this department.")
+    # Permission: Admin/President see all; Head sees only own dept
+    if not _can_view_department(user, department):
+        raise PermissionDenied("You don't have access to this department's documents.")
 
     reports = Report.objects.filter(report_type='IDM', department=department)
-    can_upload = _can_upload(user)
+    can_upload = _can_upload(user, department)
+
+    # Tag each report with can_modify for the template
+    for report in reports:
+        report.user_can_modify = _can_modify(user, report)
 
     return render(request, 'idm_dept_reports.html', {
         'page_title': f'IDM — {department.department_name}',
@@ -78,11 +122,16 @@ def idm_dept_reports(request, dept_id):
 @login_required
 def odm_reports(request):
     user = request.user
-    if not (user.is_superuser or (user.role and user.role.role_name in ['Admin', 'President'])):
+
+    # ODM: only Admin/President can view
+    if not _is_admin_or_president(user):
         raise PermissionDenied("You do not have permission to view ODM Reports.")
 
     reports = Report.objects.filter(report_type='ODM')
-    can_upload = _can_upload(user)
+    can_upload = True  # Admin/President always can
+
+    for report in reports:
+        report.user_can_modify = True  # Admin/President can modify anything
 
     return render(request, 'odm_reports.html', {
         'page_title': 'ODM Reports',
@@ -98,10 +147,10 @@ def odm_reports(request):
 def monthly_progress(request):
     user = request.user
 
-    if user.is_superuser or (user.role and user.role.role_name in ['Admin', 'President']):
+    if _is_admin_or_president(user):
         departments = Department.objects.all()
         page_desc = 'Select a department below to view its Monthly Progress reports.'
-    elif user.department:
+    elif _is_head(user) and user.department:
         departments = Department.objects.filter(department_id=user.department.department_id)
         page_desc = f'Viewing Monthly Progress reports for {user.department.department_name}.'
     else:
@@ -118,8 +167,12 @@ def monthly_progress(request):
 
 @login_required
 def bootcamp_reports(request):
+    user = request.user
     reports = Report.objects.filter(report_type='BOOTCAMP')
-    can_upload = _can_upload(request.user)
+    can_upload = _is_admin_or_president(user) or _is_head(user)
+
+    for report in reports:
+        report.user_can_modify = _is_admin_or_president(user) or _can_modify(user, report)
 
     return render(request, 'bootcamp_reports.html', {
         'page_title': 'Bootcamp Reports',
@@ -140,13 +193,16 @@ def guidelines(request):
     })
 
 
+# ─── Upload & Delete Endpoints ───
+
 @require_POST
 @login_required
 def upload_report(request):
     """Handle file upload via AJAX. Returns JSON response."""
     user = request.user
 
-    if not _can_upload(user):
+    # Basic role check
+    if not (_is_admin_or_president(user) or _is_head(user)):
         return JsonResponse({'success': False, 'error': 'You do not have permission to upload.'}, status=403)
 
     try:
@@ -162,6 +218,10 @@ def upload_report(request):
         if not file:
             return JsonResponse({'success': False, 'error': 'No file uploaded.'}, status=400)
 
+        # Enforce single file only
+        if len(request.FILES.getlist('document')) > 1:
+            return JsonResponse({'success': False, 'error': 'Only one file at a time is allowed.'}, status=400)
+
         # Validate file type (must be .docx)
         if not file.name.endswith('.docx'):
             return JsonResponse({'success': False, 'error': 'Only .docx files are accepted.'}, status=400)
@@ -172,6 +232,11 @@ def upload_report(request):
         if report_type == 'IDM' and dept_id:
             department = get_object_or_404(Department, department_id=dept_id)
             department_name = department.department_name
+
+            # Head can only upload to own department
+            if _is_head(user) and not _is_admin_or_president(user):
+                if not user.department or user.department.department_id != department.department_id:
+                    return JsonResponse({'success': False, 'error': 'You can only upload to your own department.'}, status=403)
 
         # Upload to Google Drive
         from .gdrive_service import upload_document
@@ -206,3 +271,22 @@ def upload_report(request):
     except Exception as e:
         logger.error(f"Upload error: {traceback.format_exc()}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@require_POST
+@login_required
+def delete_report(request, report_id):
+    """Delete a report. Only Admin/President or Head of the same department."""
+    user = request.user
+    report = get_object_or_404(Report, id=report_id)
+
+    if not _can_modify(user, report):
+        return JsonResponse({'success': False, 'error': 'You do not have permission to delete this report.'}, status=403)
+
+    report_name = report.original_filename
+    report.delete()
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Report "{report_name}" deleted successfully.',
+    })
