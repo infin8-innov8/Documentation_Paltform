@@ -17,7 +17,7 @@
 
 ## 📖 Overview
 
-The TIC Matrix Documentation Platform is a customized enterprise-grade portal designed to securely store and manage the club's intellectual property. Built to eliminate information silos, it serves as a central hub for Bootcamp reports, Inter-Department Meetings (IDM), Official Department Meetings (ODM), Monthly Progress reports, and general guidelines. Integrating seamlessly with Google Drive for underlying storage, it enforces strict confidentiality through dynamic Role-Based Access Control (RBAC).
+The TIC Matrix Documentation Platform is a customized portal designed to securely store and manage the club's intellectual property. Built to eliminate information silos, it serves as a central hub for Bootcamp reports, Inter-Department Meetings (IDM), Official Department Meetings (ODM), Monthly Progress reports, and general guidelines. Integrating seamlessly with Google Drive for underlying storage, it enforces strict confidentiality through dynamic Role-Based Access Control (RBAC).
 
 ## ✨ Features
 
