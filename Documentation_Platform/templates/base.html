@@ -500,7 +500,11 @@
         </div>
 
         <div class="nav-actions">
-            <input type="text" class="search-bar" placeholder="Search documents...">
+            {% if request.user.is_authenticated %}
+            <form action="{% url 'search_documents' %}" method="GET" style="display: flex;">
+                <input type="text" name="q" class="search-bar" placeholder="Search documents..." value="{{ query|default:'' }}">
+            </form>
+            {% endif %}
             {% if request.user.is_authenticated %}
             <a href="{% url 'profile' %}" title="View Profile ({{ request.user.name }})">
                 <div class="profile-avatar">{{ request.user.name|make_list|first }}</div>

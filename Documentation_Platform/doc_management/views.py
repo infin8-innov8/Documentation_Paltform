@@ -8,6 +8,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
+from django.db.models import Q
 from auth_autho.models import Department
 from .models import Report
 
@@ -135,7 +136,7 @@ def idm_dept_reports(request, dept_id):
     if not _can_view_department(user, department):
         raise PermissionDenied("You don't have access to this department's documents.")
 
-    reports = Report.objects.filter(report_type='IDM', department=department).order_by('-uploaded_at')
+    reports = Report.objects.filter(report_type='IDM', department=department, is_deleted=False).order_by('-uploaded_at')
     can_upload = _can_upload(user, department)
 
     reports = _attach_gdrive_metadata(reports, user)
@@ -159,7 +160,7 @@ def odm_reports(request):
     if not _is_admin_or_president(user):
         raise PermissionDenied("You do not have permission to view ODM Reports.")
 
-    reports = Report.objects.filter(report_type='ODM').order_by('-uploaded_at')
+    reports = Report.objects.filter(report_type='ODM', is_deleted=False).order_by('-uploaded_at')
     can_upload = True  # Admin/President always can
 
     reports = _attach_gdrive_metadata(reports, user)
@@ -205,7 +206,7 @@ def monthly_dept_reports(request, dept_id):
     if not _can_view_department(user, department):
         raise PermissionDenied("You don't have access to this department's documents.")
 
-    reports = Report.objects.filter(report_type='MONTHLY', department=department).order_by('-uploaded_at')
+    reports = Report.objects.filter(report_type='MONTHLY', department=department, is_deleted=False).order_by('-uploaded_at')
     can_upload = _can_upload(user, department)
 
     reports = _attach_gdrive_metadata(reports, user)
@@ -224,7 +225,7 @@ def monthly_dept_reports(request, dept_id):
 @login_required
 def bootcamp_reports(request):
     user = request.user
-    reports = Report.objects.filter(report_type='BOOTCAMP').order_by('-uploaded_at')
+    reports = Report.objects.filter(report_type='BOOTCAMP', is_deleted=False).order_by('-uploaded_at')
     can_upload = _is_admin_or_president(user) or _is_head(user)
 
     reports = _attach_gdrive_metadata(reports, user)
@@ -242,7 +243,7 @@ def bootcamp_reports(request):
 @login_required
 def guidelines(request):
     user = request.user
-    reports = Report.objects.filter(report_type='GUIDELINES').order_by('-uploaded_at')
+    reports = Report.objects.filter(report_type='GUIDELINES', is_deleted=False).order_by('-uploaded_at')
     can_upload = _is_admin_or_president(user)
 
     reports = _attach_gdrive_metadata(reports, user)
@@ -254,6 +255,46 @@ def guidelines(request):
         'reports': reports,
         'can_upload': can_upload,
         'report_type': 'GUIDELINES',
+    })
+
+
+@login_required
+def search_documents(request):
+    """Global search for documents across all categories."""
+    query = request.GET.get('q', '').strip()
+    user = request.user
+    
+    if not query:
+        return redirect('home')
+
+    # Base filter for text fields
+    search_filter = Q(agenda__icontains=query) | Q(topic__icontains=query) | Q(original_filename__icontains=query)
+    
+    reports = Report.objects.filter(search_filter, is_deleted=False)
+    
+    # Permission Filtering
+    if not _is_admin_or_president(user):
+        # 1. Exclude ODM (Official Dept Meetings) - strictly Admin/President
+        reports = reports.exclude(report_type='ODM')
+        
+        # 2. For IDM and Monthly, only show if it matches user's department
+        if _is_head(user) and user.department:
+            reports = reports.filter(
+                Q(report_type__in=['BOOTCAMP', 'GUIDELINES']) |
+                Q(department=user.department)
+            )
+        else:
+            # Restricted to public-ish types if no department assigned
+            reports = reports.filter(report_type__in=['BOOTCAMP', 'GUIDELINES'])
+
+    reports = reports.order_by('-uploaded_at')
+    reports = _attach_gdrive_metadata(reports, user)
+
+    return render(request, 'search_results.html', {
+        'page_title': f'Search Results: "{query}"',
+        'query': query,
+        'reports': reports,
+        'icon': '🔍'
     })
 
 
@@ -334,6 +375,14 @@ def upload_report(request):
             original_filename=file.name,
         )
 
+        # RAG Indexing
+        try:
+            from .rag_service import index_report_from_content
+            file.seek(0)
+            index_report_from_content(report, file.read())
+        except Exception as e:
+            logger.error(f"RAG Indexing failed for report {report.id}: {e}")
+
         return JsonResponse({
             'success': True,
             'message': f'Report "{file.name}" uploaded successfully.',
@@ -359,9 +408,55 @@ def delete_report(request, report_id):
         return JsonResponse({'success': False, 'error': 'You do not have permission to delete this report.'}, status=403)
 
     report_name = report.original_filename
-    report.delete()
+    report.is_deleted = True
+    report.save()
 
     return JsonResponse({
         'success': True,
         'message': f'Report "{report_name}" deleted successfully.',
     })
+ 
+ 
+@require_POST
+@login_required
+def chat_query(request):
+    """Handle AI Chatbot queries with RAG and role-based filtering."""
+    user = request.user
+    query = request.POST.get('query', '').strip()
+    
+    if not query:
+        return JsonResponse({'success': False, 'error': 'Query is empty.'}, status=400)
+ 
+    try:
+        # 1. Determine authorized reports for this user
+        authorized_reports = Report.objects.filter(is_deleted=False)
+        
+        if not _is_admin_or_president(user):
+            # Exclude ODM
+            authorized_reports = authorized_reports.exclude(report_type='ODM')
+            
+            # Filter department-specific reports (IDM and Monthly)
+            dept_filter = Q(report_type__in=['BOOTCAMP', 'GUIDELINES'])
+            if _is_head(user) and user.department:
+                dept_filter |= Q(department=user.department)
+            
+            authorized_reports = authorized_reports.filter(dept_filter)
+ 
+        authorized_ids = list(authorized_reports.values_list('id', flat=True))
+        
+        # 2. RAG Search
+        from .rag_service import search_relevant_chunks, generate_answer
+        relevant_chunks = search_relevant_chunks(query, authorized_ids)
+        
+        # 3. Generate Answer
+        answer = generate_answer(query, relevant_chunks)
+        
+        return JsonResponse({
+            'success': True,
+            'answer': answer,
+            'sources': [c.report.original_filename for c in relevant_chunks]
+        })
+        
+    except Exception as e:
+        logger.exception("Chat query error")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

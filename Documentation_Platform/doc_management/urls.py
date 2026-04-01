@@ -10,6 +10,8 @@ urlpatterns = [
     path('monthly-progress/<int:dept_id>/', views.monthly_dept_reports, name='monthly_dept_reports'),
     path('bootcamp/', views.bootcamp_reports, name='bootcamp_reports'),
     path('guidelines/', views.guidelines, name='guidelines'),
+    path('search/', views.search_documents, name='search_documents'),
+    path('chat/', views.chat_query, name='chat_query'),
     path('upload-report/', views.upload_report, name='upload_report'),
     path('delete-report/<int:report_id>/', views.delete_report, name='delete_report'),
 ]

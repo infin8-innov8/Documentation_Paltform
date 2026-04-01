@@ -38,6 +38,7 @@ class Report(models.Model):
     original_filename = models.CharField(max_length=255, blank=True, default='')
 
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-uploaded_at']
@@ -45,3 +46,13 @@ class Report(models.Model):
     def __str__(self):
         label = self.agenda or self.topic or self.original_filename
         return f"[{self.report_type}] {label} ({self.uploaded_at:%Y-%m-%d})"
+
+
+class ReportChunk(models.Model):
+    """Stores text chunks and embeddings for RAG."""
+    report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='chunks')
+    chunk_text = models.TextField()
+    embedding = models.JSONField() # Store list of floats
+
+    def __str__(self):
+        return f"Chunk for {self.report.original_filename}"
