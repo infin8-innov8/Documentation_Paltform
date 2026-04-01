@@ -151,7 +151,7 @@ QUESTION:
 ANSWER:
 """
     try:
-        model = genai.GenerativeModel('models/gemini-2.0-flash')
+        model = genai.GenerativeModel('models/gemini-flash-latest')
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
