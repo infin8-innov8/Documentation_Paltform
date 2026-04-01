@@ -454,7 +454,7 @@ def chat_query(request):
         return JsonResponse({
             'success': True,
             'answer': answer,
-            'sources': [c.report.original_filename for c in relevant_chunks]
+            'sources': list(set([c.report.agenda or c.report.topic or c.report.original_filename for c in relevant_chunks]))
         })
         
     except Exception as e:

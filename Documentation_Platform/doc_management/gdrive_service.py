@@ -26,16 +26,14 @@ def _get_credentials():
     """
     Get or refresh Google Drive credentials.
     Priority:
-    1. token.json (Saved from one-time setup) - Represents a manual admin authorization
-    2. service_account.json (Cleanest for server-side, but has limited storage)
-    3. client_secret.json (Fails if token is missing to prevent hanging)
+    1. token.json (User's personal account - has 2TB storage)
+    2. service_account.json (Server-side fallback - usually 0 storage)
     """
     from google.oauth2 import service_account
     from google.oauth2.credentials import Credentials
     from google.auth.transport.requests import Request
 
-    # 1. Try stored OAuth token (Option B - Admin's personal account)
-    creds = None
+    # 1. Try personal OAuth token (token.json)
     if TOKEN_FILE.exists():
         try:
             creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
@@ -43,12 +41,23 @@ def _get_credentials():
                 return creds
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
+                with open(TOKEN_FILE, 'w') as f:
+                    f.write(creds.to_json())
                 return creds
+            
+            # If token exists but is invalid and cannot be refreshed, ERROR OUT.
+            # Do NOT fall back to service account, as that leads to quota confusion.
+            logger.error("token.json is present but invalid/revoked. Re-authentication required.")
+            raise Exception("Personal Google Drive token has expired or been revoked. Please run 'python3 manage.py setup_gdrive'.")
+            
         except Exception as e:
-            logger.error(f"Error loading/refreshing token: {e}")
-
-    # 2. Try Service Account (Option A - Dedicated account)
-    if SERVICE_ACCOUNT_FILE.exists():
+            logger.error(f"Error refreshing token: {e}")
+            if "invalid_grant" in str(e):
+                raise Exception("Your Google Drive session has expired. Please run: python3 manage.py setup_gdrive")
+            # If it's a generic error, we might still try service account if it's the intended primary
+    
+    # 2. Try Service Account (ONLY if no token.json exists)
+    if SERVICE_ACCOUNT_FILE.exists() and not TOKEN_FILE.exists():
         try:
             return service_account.Credentials.from_service_account_file(
                 str(SERVICE_ACCOUNT_FILE), scopes=SCOPES
@@ -56,10 +65,10 @@ def _get_credentials():
         except Exception as e:
             logger.error(f"Error loading service account: {e}")
 
-    # 3. If no valid credentials, DO NOT start interactive flow in a web request
+    # 3. Fail if no valid credentials found
     raise Exception(
-        "Google Drive authentication missing. Please run 'python3 manage.py setup_gdrive' "
-        "to authorize the application once."
+        "Google Drive authentication missing or expired. Please run 'python3 manage.py setup_gdrive' "
+        "to authorize your personal 2TB account."
     )
 
 

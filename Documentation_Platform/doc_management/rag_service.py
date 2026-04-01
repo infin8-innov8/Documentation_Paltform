@@ -76,14 +76,32 @@ def index_report(report):
     pass # This will be called from upload_report with the file_obj
 
 def index_report_from_content(report, file_content):
-    """Indexes a report from raw bytes content."""
+    """Indexes a report from raw bytes content with metadata-rich header."""
     from io import BytesIO
     text = extract_text_from_docx(BytesIO(file_content))
     if not text:
         logger.warning(f"No text extracted from report {report.id}")
         return
         
-    chunks = chunk_text(text)
+    # Construct metadata-rich header
+    dept_name = report.department.department_name if report.department else "N/A"
+    header = (
+        f"REPORT_METADATA_HEADER\n"
+        f"Type: {report.get_report_type_display()}\n"
+        f"Department: {dept_name}\n"
+        f"Agenda: {report.agenda or 'N/A'}\n"
+        f"Topic: {report.topic or 'N/A'}\n"
+        f"Date: {report.date_of_conduction or 'N/A'}\n"
+        f"Original Filename: {report.original_filename}\n"
+        f"--- START DOCUMENT CONTENT ---\n"
+    )
+    
+    full_text = header + text
+    chunks = chunk_text(full_text)
+    
+    # Clean previous chunks if any (for re-indexing)
+    report.chunks.all().delete()
+    
     for chunk in chunks:
         emb = get_embedding(chunk)
         if emb:
@@ -92,7 +110,7 @@ def index_report_from_content(report, file_content):
                 chunk_text=chunk,
                 embedding=emb
             )
-    logger.info(f"Indexed report {report.id} ({len(chunks)} chunks).")
+    logger.info(f"Indexed report {report.id} ({len(chunks)} chunks) with prefix metadata.")
 
 def cosine_similarity(v1, v2):
     """Simple cosine similarity implementation."""
@@ -137,10 +155,14 @@ def generate_answer(query, context_chunks):
         context_text = "\n\n---\n\n".join([c.chunk_text for c in context_chunks])
         
     prompt = f"""
-You are a documentation assistant for the TIC Matrix Platform. 
-Use the following context from official documents to answer the user's question.
-If the answer is not in the context, try to answer politely as a general assistant, 
-but clarify that there is no official documentation for that specific query.
+You are a precision documentation assistant for the TIC Matrix Platform. 
+Use the following context (which includes document headers and extracted content) to answer the user's question accurately.
+
+RULES:
+1. If the user asks for "Agendas" or "Topics", list them exactly as they appear in the METADATA_HEADER section.
+2. Use clean Markdown for lists and bold text. 
+3. If multiple documents are relevant, group your answer by document or date.
+4. If the info is not in the context, clearly state that there is no official record for that specific query.
 
 CONTEXT:
 {context_text}
